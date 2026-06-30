@@ -563,9 +563,37 @@ function renderRoomList() {
       li.appendChild(badge);
     }
 
+    const leaveBtn = document.createElement('button');
+    leaveBtn.className = 'contact-remove-btn';
+    leaveBtn.title = 'Leave room';
+    leaveBtn.textContent = '×';
+    leaveBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (!confirm(`Are you sure you want to leave #${localPart(room.jid)}?`)) return;
+      leaveRoom(room.jid);
+    });
+    li.appendChild(leaveBtn);
+
     li.addEventListener('click', () => openRoom(room.jid));
     roomListEl.appendChild(li);
   }
+}
+
+// leaveRoom tells the server to leave the MUC and removes it from the UI.
+function leaveRoom(jid) {
+  send({ type: 'leave_room', room: jid });
+  delete state.rooms[jid];
+  delete state.messages[convKey('room', jid)];
+  delete state.unread[convKey('room', jid)];
+  if (state.activeConv && state.activeConv.type === 'room' && state.activeConv.jid === jid) {
+    state.activeConv = null;
+    chatTitleEl.textContent = 'Select a conversation';
+    setComposeEnabled(false);
+    messagesEl.innerHTML = '';
+    renderMembersPanel();
+  }
+  updateTitle();
+  renderRoomList();
 }
 
 function renderMessages() {
@@ -788,6 +816,9 @@ function renderMembersPanel() {
   for (const occ of occs) {
     const li = document.createElement('li');
     li.className = 'member-item';
+    // Show the JID on hover: the real JID when the room exposes it (non-anonymous
+    // rooms / moderator view), otherwise the in-room address room@host/nick.
+    li.title = occ.jid || `${room.jid}/${occ.nick}`;
     const av = document.createElement('div');
     av.className = 'avatar';
     av.style.cssText = `width:24px;height:24px;font-size:11px;background:${jidColor(occ.nick)}`;
