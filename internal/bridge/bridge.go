@@ -169,10 +169,10 @@ func SendInitialState(ctx context.Context, u *user.User, sess *session.Session, 
 
 // MockXMPPConn is a test double for XMPPConn used in unit tests.
 type MockXMPPConn struct {
-	SentTo    string
-	SentBody  string
-	SentRoom  string
-	SentShow  string
+	SentTo     string
+	SentBody   string
+	SentRoom   string
+	SentShow   string
 	JoinedRoom string
 	LeftRoom   string
 
@@ -209,7 +209,7 @@ func (m *MockXMPPConn) FetchRoster(_ context.Context) ([]xmpp.RosterItem, error)
 func (m *MockXMPPConn) DiscoverRooms(_ context.Context) ([]xmpp.RoomInfo, error) {
 	return nil, nil
 }
-func (m *MockXMPPConn) AddContact(_ context.Context, _, _ string) error      { return nil }
+func (m *MockXMPPConn) AddContact(_ context.Context, _, _ string) error       { return nil }
 func (m *MockXMPPConn) RemoveContact(_ context.Context, _ string) error       { return nil }
 func (m *MockXMPPConn) AcceptSubscription(_ context.Context, _ string) error  { return nil }
 func (m *MockXMPPConn) DeclineSubscription(_ context.Context, _ string) error { return nil }
@@ -218,6 +218,6 @@ func (m *MockXMPPConn) QueryMAM(_ context.Context, _ xmpp.MAMQuery) (<-chan xmpp
 	close(ch)
 	return ch, nil
 }
-func (m *MockXMPPConn) Events() <-chan xmpp.Event        { return m.events }
-func (m *MockXMPPConn) Done() <-chan struct{}              { return make(chan struct{}) }
-func (m *MockXMPPConn) Close() error                      { return nil }
+func (m *MockXMPPConn) Events() <-chan xmpp.Event { return m.events }
+func (m *MockXMPPConn) Done() <-chan struct{}     { return make(chan struct{}) }
+func (m *MockXMPPConn) Close() error              { return nil }

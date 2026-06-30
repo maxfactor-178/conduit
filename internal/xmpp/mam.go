@@ -62,7 +62,7 @@ func buildFilter(q MAMQuery) mxhistory.Query {
 	// which many servers including ejabberd do not support.
 	f := mxhistory.Query{
 		Limit:  uint64(max),
-		Last:   true,   // fetch from most recent page, scrolling backwards
+		Last:   true,     // fetch from most recent page, scrolling backwards
 		PageID: q.Before, // when non-empty: fetch the page ending before this msg ID
 	}
 	return f

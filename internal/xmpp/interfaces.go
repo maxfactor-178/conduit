@@ -9,15 +9,15 @@ import (
 type EventType int
 
 const (
-	EventChat              EventType = iota // one-to-one chat message
-	EventRoomMessage                        // MUC groupchat message
-	EventPresence                           // contact presence change
-	EventRoomPresence                       // MUC occupant presence change
-	EventRoster                             // full roster push
-	EventRosterUpdate                       // single roster item delta
-	EventConnected                          // session fully negotiated
-	EventDisconnected                       // session lost
-	EventSubscribeRequest                   // someone wants to subscribe to our presence
+	EventChat             EventType = iota // one-to-one chat message
+	EventRoomMessage                       // MUC groupchat message
+	EventPresence                          // contact presence change
+	EventRoomPresence                      // MUC occupant presence change
+	EventRoster                            // full roster push
+	EventRosterUpdate                      // single roster item delta
+	EventConnected                         // session fully negotiated
+	EventDisconnected                      // session lost
+	EventSubscribeRequest                  // someone wants to subscribe to our presence
 )
 
 // RosterItem is a single entry in the XMPP roster.
@@ -43,8 +43,8 @@ type Event struct {
 	Room      string
 	Nick      string
 	Body      string
-	Show      string   // presence show value
-	Status    string   // presence status text
+	Show      string // presence show value
+	Status    string // presence status text
 	Time      time.Time
 	Roster    []RosterItem
 	Occupants []Occupant

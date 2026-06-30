@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/google/uuid"
 	"conduit/pkg/protocol"
+	"github.com/google/uuid"
 )
 
 const sendBuffer = 32

@@ -104,8 +104,8 @@ func (u *User) Done() <-chan struct{} {
 
 // Manager owns all active User instances and their XMPP connections.
 type Manager struct {
-	mu      sync.RWMutex
-	users   map[string]*User // keyed by bare JID
+	mu    sync.RWMutex
+	users map[string]*User // keyed by bare JID
 
 	newXMPP     func(ctx context.Context, jid string) (xmpp.XMPPConn, error)
 	idleTimeout time.Duration
@@ -267,9 +267,9 @@ func eventToOutbound(evt xmpp.Event) *protocol.OutboundMessage {
 		}
 		return &protocol.OutboundMessage{
 			Type:    protocol.TypeOccupants,
-			From:    evt.From,   // full JID: room@conf/nick
+			From:    evt.From, // full JID: room@conf/nick
 			Room:    evt.Room,
-			Show:    evt.Show,   // "available" or "unavailable"
+			Show:    evt.Show, // "available" or "unavailable"
 			Payload: occs,
 		}
 	}

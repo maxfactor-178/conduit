@@ -26,7 +26,7 @@ const (
 type InboundMessage struct {
 	Type         string `json:"type"`
 	To           string `json:"to,omitempty"`
-	Name         string `json:"name,omitempty"`         // display name for add_contact
+	Name         string `json:"name,omitempty"` // display name for add_contact
 	Room         string `json:"room,omitempty"`
 	Body         string `json:"body,omitempty"`
 	Show         string `json:"show,omitempty"`         // presence
@@ -52,9 +52,9 @@ type OutboundMessage struct {
 
 // RosterItem represents a single entry in the user's contact list.
 type RosterItem struct {
-	JID          string `json:"jid"`
-	Name         string `json:"name,omitempty"`
-	Subscription string `json:"subscription,omitempty"`
+	JID          string   `json:"jid"`
+	Name         string   `json:"name,omitempty"`
+	Subscription string   `json:"subscription,omitempty"`
 	Groups       []string `json:"groups,omitempty"`
 }
 

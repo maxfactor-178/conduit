@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
+	"conduit/pkg/protocol"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"conduit/pkg/protocol"
 )
 
 func TestInboundMessage_RoundTrip(t *testing.T) {

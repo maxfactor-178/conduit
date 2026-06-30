@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"conduit/internal/sanitize"
 	mxdisco "mellium.im/xmpp/disco"
 	"mellium.im/xmpp/disco/items"
 	"mellium.im/xmpp/jid"
-	"conduit/internal/sanitize"
 )
 
 func (c *conn) DiscoverRooms(ctx context.Context) ([]RoomInfo, error) {

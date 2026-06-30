@@ -11,15 +11,15 @@ import (
 	"sync"
 	"time"
 
+	"conduit/config"
+	"mellium.im/sasl"
+	"mellium.im/xmlstream"
 	mx "mellium.im/xmpp"
 	mxhistory "mellium.im/xmpp/history"
 	"mellium.im/xmpp/jid"
 	"mellium.im/xmpp/mux"
 	"mellium.im/xmpp/roster"
 	"mellium.im/xmpp/stanza"
-	"mellium.im/sasl"
-	"mellium.im/xmlstream"
-	"conduit/config"
 )
 
 const eventBuffer = 64

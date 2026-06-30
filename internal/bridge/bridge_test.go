@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"conduit/internal/bridge"
 	"conduit/internal/session"
 	"conduit/internal/user"
 	"conduit/pkg/protocol"
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestSession() *session.Session {

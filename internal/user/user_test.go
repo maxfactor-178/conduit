@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"conduit/internal/bridge"
 	"conduit/internal/session"
 	"conduit/internal/user"
 	"conduit/internal/xmpp"
 	"conduit/pkg/protocol"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func newTestLog() *slog.Logger {

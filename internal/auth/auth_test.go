@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"conduit/internal/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"conduit/internal/auth"
 )
 
 func newTestMapper(t *testing.T, devEnabled bool, devUser string) *auth.Mapper {
