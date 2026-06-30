@@ -86,7 +86,11 @@ type XMPPConn interface {
 	// MUC
 	JoinRoom(ctx context.Context, room, nick string) error
 	LeaveRoom(ctx context.Context, room string) error
-	DiscoverRooms(ctx context.Context) ([]RoomInfo, error)
+	// DiscoverRooms lists rooms across the configured conference hosts plus any
+	// extraHosts supplied by the caller. It returns the discovered rooms and the
+	// full, deduplicated list of hosts that were queried (so callers can show a
+	// group even for a host that returned no rooms).
+	DiscoverRooms(ctx context.Context, extraHosts []string) (rooms []RoomInfo, hosts []string, err error)
 
 	// Presence
 	SetPresence(ctx context.Context, show, status string) error

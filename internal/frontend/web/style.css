@@ -474,6 +474,33 @@ html, body, #app {
 }
 .room-browser-row:hover { background: var(--bg-accent); }
 
+/* Server group header in the room browser */
+.room-browser-server {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 12px 4px 4px;
+  border-bottom: 1px solid var(--bg-tertiary);
+  margin-bottom: 4px;
+}
+.room-browser-server span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.room-browser-server-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.room-browser-server-remove:hover { color: var(--text-normal); background: var(--bg-accent); }
+
 /* Members panel (room occupants) */
 #members-panel {
   width: 200px;

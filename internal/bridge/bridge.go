@@ -99,8 +99,9 @@ func (b *Bridge) HandleInbound(ctx context.Context, msg protocol.InboundMessage)
 		}
 
 	case protocol.TypeDiscoverRooms:
+		extraHosts := msg.Hosts
 		go func() {
-			rooms, err := conn.DiscoverRooms(ctx)
+			rooms, hosts, err := conn.DiscoverRooms(ctx, extraHosts)
 			if err != nil {
 				b.sendError(ctx, "discover rooms: "+err.Error())
 				return
@@ -114,7 +115,7 @@ func (b *Bridge) HandleInbound(ctx context.Context, msg protocol.InboundMessage)
 				})
 			}
 			select {
-			case b.session.Send <- protocol.OutboundMessage{Type: protocol.TypeRoomList, Payload: list}:
+			case b.session.Send <- protocol.OutboundMessage{Type: protocol.TypeRoomList, Hosts: hosts, Payload: list}:
 			case <-ctx.Done():
 			}
 		}()
@@ -206,8 +207,8 @@ func (m *MockXMPPConn) SetPresence(_ context.Context, show, _ string) error {
 func (m *MockXMPPConn) FetchRoster(_ context.Context) ([]xmpp.RosterItem, error) {
 	return nil, nil
 }
-func (m *MockXMPPConn) DiscoverRooms(_ context.Context) ([]xmpp.RoomInfo, error) {
-	return nil, nil
+func (m *MockXMPPConn) DiscoverRooms(_ context.Context, _ []string) ([]xmpp.RoomInfo, []string, error) {
+	return nil, nil, nil
 }
 func (m *MockXMPPConn) AddContact(_ context.Context, _, _ string) error       { return nil }
 func (m *MockXMPPConn) RemoveContact(_ context.Context, _ string) error       { return nil }

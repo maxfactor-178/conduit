@@ -32,7 +32,8 @@ type XMPPConfig struct {
 	Domain              string        `yaml:"domain"`
 	TLSMode             string        `yaml:"tls_mode"` // "starttls" verifies the server cert; any other value (e.g. "starttls-insecure", "none") skips verification. STARTTLS is always negotiated either way.
 	Resource            string        `yaml:"resource"`
-	MUCHost             string        `yaml:"muc_host"`
+	MUCHost             string        `yaml:"muc_host"`  // primary (local) conference host
+	MUCHosts            []string      `yaml:"muc_hosts"` // additional conference hosts to also browse (e.g. remote servers)
 	DialTimeout         time.Duration `yaml:"dial_timeout"`
 	IdleShutdown        time.Duration `yaml:"idle_shutdown"`
 	ReconnectMaxBackoff time.Duration `yaml:"reconnect_max_backoff"`

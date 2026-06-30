@@ -245,64 +245,129 @@ function handleRoomMsg(msg) {
   if (mentioned) playNotification('mention');
 }
 
+// ── Room discovery (MUC browse) ──────────────────────────────────────────────
+// User-added conference hosts to also browse, persisted per browser.
+function getExtraMucHosts() {
+  try { return JSON.parse(localStorage.getItem('conduit.mucHosts') || '[]'); }
+  catch { return []; }
+}
+function saveExtraMucHosts(hosts) {
+  localStorage.setItem('conduit.mucHosts', JSON.stringify(hosts));
+}
+function addExtraMucHost(h) {
+  const hosts = getExtraMucHosts();
+  if (!hosts.includes(h)) { hosts.push(h); saveExtraMucHosts(hosts); }
+}
+function removeExtraMucHost(h) {
+  saveExtraMucHosts(getExtraMucHosts().filter(x => x !== h));
+}
+
+// browseRooms asks the server to discover rooms across the configured hosts plus
+// any servers the user has added in this browser.
+function browseRooms() {
+  const list = $('room-browser-list');
+  if (list) {
+    list.innerHTML = '<p id="room-browser-status" style="color:var(--text-muted);font-size:14px;padding:16px 0">Loading rooms…</p>';
+  }
+  send({ type: 'discover_rooms', hosts: getExtraMucHosts() });
+}
+
 function handleRoomList(msg) {
-  const list  = $('room-browser-list');
-  const status = $('room-browser-status');
-  const rooms = msg.payload || [];
-
+  const list = $('room-browser-list');
   if (!list) return;
-  // Remove loading text
-  if (status) status.remove();
-  list.querySelectorAll('.room-browser-row').forEach(el => el.remove());
+  list.innerHTML = '';
 
-  if (rooms.length === 0) {
+  const rooms   = msg.payload || [];
+  const extras  = getExtraMucHosts();
+
+  // Group rooms by their conference host (the domain part of the room JID).
+  const byHost = {};
+  for (const r of rooms) {
+    const h = domainOf(r.jid);
+    (byHost[h] = byHost[h] || []).push(r);
+  }
+
+  // Server order: the hosts the server queried (config order) first, then any
+  // host that appeared in results but wasn't explicitly listed.
+  const hosts = [...(msg.hosts || [])];
+  for (const h of Object.keys(byHost)) if (!hosts.includes(h)) hosts.push(h);
+
+  if (hosts.length === 0) {
     const p = document.createElement('p');
     p.style.cssText = 'color:var(--text-muted);font-size:14px;padding:16px 0';
-    p.textContent = 'No public rooms found.';
+    p.textContent = 'No rooms found.';
     list.appendChild(p);
     return;
   }
 
-  // Sort alphabetically by name
-  rooms.sort((a, b) => (a.name || a.jid).localeCompare(b.name || b.jid));
-
-  for (const room of rooms) {
-    const row = document.createElement('div');
-    row.className = 'room-browser-row';
-
-    const info = document.createElement('div');
-    info.style.cssText = 'flex:1;min-width:0';
-
-    const name = document.createElement('div');
-    name.style.cssText = 'font-size:14px;font-weight:600;color:var(--text-normal);display:flex;align-items:center;gap:6px';
-    name.textContent = room.name || localPart(room.jid);
-    if (room.password_protected) {
-      const lock = document.createElement('span');
-      lock.textContent = '🔒';
-      lock.title = 'Password protected';
-      lock.style.fontSize = '12px';
-      name.appendChild(lock);
+  for (const host of hosts) {
+    const header = document.createElement('div');
+    header.className = 'room-browser-server';
+    const label = document.createElement('span');
+    label.textContent = host;
+    header.appendChild(label);
+    if (extras.includes(host)) {
+      const rm = document.createElement('button');
+      rm.className = 'room-browser-server-remove';
+      rm.title = 'Stop browsing this server';
+      rm.textContent = '×';
+      rm.addEventListener('click', () => {
+        removeExtraMucHost(host);
+        browseRooms();
+      });
+      header.appendChild(rm);
     }
+    list.appendChild(header);
 
-    const jidEl = document.createElement('div');
-    jidEl.style.cssText = 'font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    jidEl.textContent = room.jid;
-
-    info.appendChild(name);
-    info.appendChild(jidEl);
-
-    const btn = document.createElement('button');
-    btn.className = 'button is-small is-primary';
-    btn.textContent = 'Join';
-    btn.addEventListener('click', () => {
-      closeModal('modal-join-room');
-      openRoom(room.jid);
-    });
-
-    row.appendChild(info);
-    row.appendChild(btn);
-    list.appendChild(row);
+    const hostRooms = (byHost[host] || []).sort((a, b) =>
+      (a.name || a.jid).localeCompare(b.name || b.jid));
+    if (hostRooms.length === 0) {
+      const p = document.createElement('div');
+      p.style.cssText = 'color:var(--text-muted);font-size:12px;padding:4px 0 8px';
+      p.textContent = 'No public rooms.';
+      list.appendChild(p);
+      continue;
+    }
+    for (const room of hostRooms) list.appendChild(renderRoomBrowserRow(room));
   }
+}
+
+function renderRoomBrowserRow(room) {
+  const row = document.createElement('div');
+  row.className = 'room-browser-row';
+
+  const info = document.createElement('div');
+  info.style.cssText = 'flex:1;min-width:0';
+
+  const name = document.createElement('div');
+  name.style.cssText = 'font-size:14px;font-weight:600;color:var(--text-normal);display:flex;align-items:center;gap:6px';
+  name.textContent = room.name || localPart(room.jid);
+  if (room.password_protected) {
+    const lock = document.createElement('span');
+    lock.textContent = '🔒';
+    lock.title = 'Password protected';
+    lock.style.fontSize = '12px';
+    name.appendChild(lock);
+  }
+
+  const jidEl = document.createElement('div');
+  jidEl.style.cssText = 'font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  jidEl.textContent = room.jid;
+
+  info.appendChild(name);
+  info.appendChild(jidEl);
+
+  const btn = document.createElement('button');
+  btn.className = 'button is-small is-primary';
+  btn.textContent = 'Join';
+  btn.addEventListener('click', () => {
+    closeModal('modal-join-room');
+    openRoom(room.jid);
+  });
+
+  row.appendChild(info);
+  row.appendChild(btn);
+  return row;
 }
 
 function handleSubscribeRequest(msg) {
@@ -607,6 +672,14 @@ function localPart(jid) {
   return at > 0 ? jid.substring(0, at) : jid;
 }
 
+// domainOf returns the domain part of a JID (everything after '@', resource
+// stripped). For a room JID room@conference.host this is the conference host.
+function domainOf(jid) {
+  const bare = bareJID(jid);
+  const at = bare.indexOf('@');
+  return at >= 0 ? bare.substring(at + 1) : bare;
+}
+
 function nickOf(fullJID) {
   const slash = fullJID.lastIndexOf('/');
   return slash >= 0 ? fullJID.substring(slash + 1) : fullJID;
@@ -754,15 +827,27 @@ composeEl.addEventListener('keydown', e => {
 composeEl.addEventListener('input', autoResizeCompose);
 
 $('btn-join-room').addEventListener('click', () => {
-  // Reset browser list to loading state each time the modal opens.
-  const list = $('room-browser-list');
-  if (list) {
-    list.innerHTML = '<p id="room-browser-status" style="color:var(--text-muted);font-size:14px;padding:16px 0">Loading rooms…</p>';
-  }
   openModal('modal-join-room');
-  send({ type: 'discover_rooms' });
+  browseRooms();
 });
 $('btn-new-dm').addEventListener('click',    () => openModal('modal-new-dm'));
+
+function submitBrowseHost() {
+  const host = $('input-browse-host').value.trim().toLowerCase();
+  if (!host) return;
+  // Expect a conference host (e.g. conference.other.org), not a JID.
+  if (host.includes('@') || host.includes(' ') || !host.includes('.')) {
+    showToast('Enter a conference host like conference.other.org', true);
+    return;
+  }
+  addExtraMucHost(host);
+  $('input-browse-host').value = '';
+  browseRooms();
+}
+$('btn-add-browse-host').addEventListener('click', submitBrowseHost);
+$('input-browse-host').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); submitBrowseHost(); }
+});
 
 $('btn-do-join-room').addEventListener('click', () => {
   const jid = $('input-room-jid').value.trim();

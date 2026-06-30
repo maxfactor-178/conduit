@@ -230,7 +230,8 @@ xmpp:
                                # either way (ejabberd advertises it, so the
                                # handler must always be registered).
   resource: "conduit"         # XMPP resource appended to JID
-  muc_host: "conference.example.com"   # defaults to conference.<domain>
+  muc_host: "conference.example.com"   # primary conference host; defaults to conference.<domain>
+  muc_hosts: []                        # extra conference hosts to browse (federated/remote servers)
   dial_timeout: 10s
   idle_shutdown: 60s           # close XMPP connection after last session disconnects
   reconnect_max_backoff: 30s

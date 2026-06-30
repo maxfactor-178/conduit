@@ -59,7 +59,7 @@ go run ./cmd/conduit -config config/config.dev.yaml
 - `internal/xmpp/conn.go` — Connection lifecycle, mux registration, stanza handlers, XML child readers.
 - `internal/xmpp/muc.go` — Room join/leave/rejoin.
 - `internal/xmpp/roster.go` — Roster add/remove, subscription accept/decline.
-- `internal/xmpp/disco.go` — MUC room discovery via disco#items + disco#info.
+- `internal/xmpp/disco.go` — MUC room discovery via disco#items + disco#info. Queries multiple conference hosts (`muc_host` + `muc_hosts` + per-request extras), each bounded by `DialTimeout` so one dead remote server can't stall discovery.
 - `internal/xmpp/mam.go` — MAM history queries.
 - `pkg/protocol/protocol.go` — Every message type constant + struct. Check here before adding new message types.
 - `internal/bridge/bridge.go` — Central dispatch for inbound messages. Also contains `MockXMPPConn` for tests — add a stub here whenever `XMPPConn` grows a new method.
@@ -95,7 +95,7 @@ Full field details in [README.md — Protocol Reference](README.md#protocol-refe
 ## Current state / what's working
 
 - 1:1 chat with message history (MAM, load-more button)
-- MUC rooms: join/leave, message send/receive, occupant list panel, room discovery modal
+- MUC rooms: join/leave, message send/receive, occupant list panel, room discovery modal (groups results by server; users can browse/join rooms on other federated servers by adding a conference host)
 - Roster: add/remove contacts, subscription request flow (accept/decline modal)
 - Presence indicators (online/away/dnd/offline dots)
 - Multi-session: multiple tabs and multiple HTTP users mapped to the same JID all stay in sync

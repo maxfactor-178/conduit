@@ -33,6 +33,8 @@ type InboundMessage struct {
 	Conversation string `json:"conversation,omitempty"` // history target
 	Before       string `json:"before,omitempty"`       // MAM pagination cursor
 	Limit        int    `json:"limit,omitempty"`
+
+	Hosts []string `json:"hosts,omitempty"` // discover_rooms: extra conference hosts to browse
 }
 
 // OutboundMessage is a message sent from the server to the browser over WebSocket.
@@ -46,6 +48,7 @@ type OutboundMessage struct {
 	Show      string      `json:"show,omitempty"`      // presence show value
 	Timestamp string      `json:"timestamp,omitempty"` // RFC3339
 	Brand     string      `json:"brand,omitempty"`     // UI/page title, sent on "connected"
+	Hosts     []string    `json:"hosts,omitempty"`     // room_list: conference hosts that were queried
 	Payload   interface{} `json:"payload,omitempty"`
 	Error     string      `json:"error,omitempty"`
 }

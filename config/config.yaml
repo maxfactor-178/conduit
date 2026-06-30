@@ -14,7 +14,10 @@ xmpp:
   domain: "example.com"
   tls_mode: "none"
   resource: "conduit"
-  muc_host: "conference.example.com"
+  muc_host: "conference.example.com"   # primary (local) conference host
+  muc_hosts: []                        # extra conference hosts to also browse,
+                                       # e.g. ["conference.partner.org"] for a
+                                       # federated server (s2s must be working)
   dial_timeout: 10s
   idle_shutdown: 60s
   reconnect_max_backoff: 30s
