@@ -1,0 +1,38 @@
+brand: "Conduit"   # browser tab / page title shown in the UI
+
+http:
+  addr: ":8080"
+  read_timeout: 10s
+  write_timeout: 10s
+  shutdown_timeout: 15s
+  allowed_origins:
+    - "http://localhost:8080"
+
+xmpp:
+  host: "localhost"
+  port: 5222
+  domain: "example.com"
+  tls_mode: "none"
+  resource: "conduit"
+  muc_host: "conference.example.com"
+  dial_timeout: 10s
+  idle_shutdown: 60s
+  reconnect_max_backoff: 30s
+
+auth:
+  username_header: "X-Remote-User"
+  jid_mapping_file: "/etc/conduit/users.json"
+  credentials_file: "/etc/conduit/credentials.json"
+
+dev:
+  enabled: false
+  username: "alice"
+  password: "password123"
+
+history:
+  default_limit: 50
+  max_limit: 200
+
+log:
+  level: "info"
+  format: "text"

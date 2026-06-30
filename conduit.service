@@ -1,0 +1,43 @@
+[Unit]
+Description=Conduit — XMPP web chat bridge
+Documentation=https://github.com/your-org/conduit
+After=network.target
+# If ejabberd runs on the same host, wait for it too.
+# Remove this line if ejabberd is on a separate server.
+After=ejabberd.service
+
+[Service]
+Type=simple
+User=conduit
+Group=conduit
+
+ExecStart=/usr/local/bin/conduit -config /etc/conduit/config.yaml
+Restart=on-failure
+RestartSec=5s
+
+# Give the process time to drain WebSocket connections on shutdown.
+TimeoutStopSec=30s
+
+# Environment overrides (uncomment as needed).
+# Environment=DEV_MODE=false
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/conduit
+# The process does not need to write to disk.
+ReadWritePaths=
+
+# Limit blast radius if the process is compromised.
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,52 @@
+hosts:
+  - "example.com"
+
+loglevel: info
+
+certfiles:
+  - "/home/ejabberd/conf/server.pem"
+
+listen:
+  - port: 5222
+    ip: "::"
+    module: ejabberd_c2s
+    starttls: true
+
+  - port: 5280
+    ip: "::"
+    module: ejabberd_http
+    request_handlers:
+      /admin: ejabberd_web_admin
+
+auth_method: [internal]
+auth_password_format: scram
+
+acl:
+  admin:
+    user: "admin@example.com"
+  local:
+    user_regexp: ""
+
+access_rules:
+  local:
+    allow: local
+  c2s:
+    deny: blocked
+    allow: all
+  muc_create:
+    allow: local
+  register:
+    allow: all
+
+modules:
+  mod_roster: {}
+  mod_ping: {}
+  mod_register: {}
+  mod_muc:
+    host: "conference.@HOST@"
+    access_create: muc_create
+    default_room_options:
+      persistent: true
+      public: true
+  mod_mam:
+    default: always

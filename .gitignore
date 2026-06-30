@@ -1,0 +1,24 @@
+# Compiled binaries
+/conduit
+/conduit.exe
+*.exe
+*.out
+
+# Secrets / runtime config (commit the .example versions only)
+config/credentials.json
+config/users.json
+*.pem
+*.key
+
+# Local tooling
+.claude/settings.local.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Dependencies
+node_modules/

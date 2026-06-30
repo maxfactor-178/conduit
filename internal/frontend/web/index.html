@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conduit</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Server rail (leftmost column) -->
+    <aside id="server-rail">
+      <div class="server-icon active" title="XMPP">
+        <span>X</span>
+      </div>
+    </aside>
+
+    <!-- Sidebar: contact/room list -->
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <span id="current-jid" class="tag is-dark"></span>
+        <button id="btn-sound-settings" title="Settings" style="margin-left:auto;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:3px">🔔</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span>Direct Messages</span>
+          <button class="sidebar-section-btn" id="btn-new-dm" title="New DM">+</button>
+        </div>
+        <ul id="dm-list" class="channel-list"></ul>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-header">
+          <span>Rooms</span>
+          <button class="sidebar-section-btn" id="btn-join-room" title="Join room">+</button>
+        </div>
+        <ul id="room-list" class="channel-list"></ul>
+      </div>
+    </aside>
+
+    <!-- Main panel -->
+    <main id="main-panel">
+      <header id="chat-header">
+        <span id="chat-title">Select a conversation</span>
+        <span id="chat-topic" class="chat-topic"></span>
+        <button id="btn-load-history" disabled title="Load older messages">↑ History</button>
+      </header>
+
+      <div id="message-area">
+        <div id="messages"></div>
+      </div>
+
+      <footer id="compose-area">
+        <textarea
+          id="compose"
+          rows="1"
+          placeholder="Message..."
+          disabled
+        ></textarea>
+        <button id="btn-send" disabled>Send</button>
+      </footer>
+    </main>
+
+    <!-- Members panel — visible only when a room is active -->
+    <aside id="members-panel" hidden>
+      <div class="members-header">Members <span id="members-count"></span></div>
+      <ul id="members-list"></ul>
+    </aside>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-join-room" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card" style="width:560px;max-width:96vw">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Browse Rooms</p>
+        <button class="delete" aria-label="close" data-close-modal="modal-join-room"></button>
+      </header>
+      <section class="modal-card-body" style="padding:0;display:flex;flex-direction:column;gap:0">
+        <!-- Room list -->
+        <div id="room-browser-list" style="flex:1;overflow-y:auto;min-height:160px;max-height:360px;padding:8px 16px">
+          <p id="room-browser-status" style="color:var(--text-muted);font-size:14px;padding:16px 0">Loading rooms…</p>
+        </div>
+        <!-- Manual JID fallback -->
+        <div style="border-top:1px solid var(--bg-tertiary);padding:12px 16px;display:flex;gap:8px;align-items:center">
+          <input class="input" id="input-room-jid" type="text"
+            placeholder="Or enter JID: room@conference.example.com"
+            style="font-size:13px" />
+          <button class="button is-primary is-small" id="btn-do-join-room">Join</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="modal-new-dm" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Add Contact</p>
+        <button class="delete" aria-label="close" data-close-modal="modal-new-dm"></button>
+      </header>
+      <section class="modal-card-body">
+        <div class="field">
+          <label class="label" style="color:var(--text-normal)">JID</label>
+          <input class="input" id="input-dm-jid" type="text" placeholder="user@example.com" />
+        </div>
+        <div class="field">
+          <label class="label" style="color:var(--text-normal)">Display name (optional)</label>
+          <input class="input" id="input-dm-name" type="text" placeholder="Alice" />
+        </div>
+        <label class="checkbox" style="color:var(--text-muted);font-size:0.9rem">
+          <input type="checkbox" id="input-dm-subscribe" checked />
+          Send contact request (add to roster)
+        </label>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-primary" id="btn-do-new-dm">Open chat</button>
+        <button class="button" data-close-modal="modal-new-dm">Cancel</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="modal-subscribe-request" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Contact Request</p>
+      </header>
+      <section class="modal-card-body">
+        <p style="color:var(--text-normal)">
+          <strong id="subscribe-request-jid"></strong> wants to add you as a contact.
+        </p>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-success" id="btn-accept-subscription">Accept</button>
+        <button class="button is-danger"  id="btn-decline-subscription">Decline</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="modal-sound-settings" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Settings</p>
+        <button class="delete" aria-label="close" data-close-modal="modal-sound-settings"></button>
+      </header>
+      <section class="modal-card-body" id="sound-settings">
+        <label class="snd-row">
+          <span>Notification sounds</span>
+          <input type="checkbox" id="snd-enabled" />
+        </label>
+        <label class="snd-row">
+          <span>Volume</span>
+          <input type="range" id="snd-volume" min="0" max="100" step="5" style="flex:1" />
+        </label>
+        <label class="snd-row">
+          <span>Only when tab is hidden</span>
+          <input type="checkbox" id="snd-only-hidden" />
+        </label>
+        <div class="snd-divider"></div>
+        <div class="snd-row" style="gap:6px">
+          <button class="snd-test-btn" id="snd-test-dm">Test DM</button>
+          <button class="snd-test-btn" id="snd-test-mention">Test mention</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

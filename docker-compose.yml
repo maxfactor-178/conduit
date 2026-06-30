@@ -1,0 +1,19 @@
+services:
+  ejabberd:
+    image: ejabberd/ecs:latest
+    ports:
+      - "5222:5222"
+      - "5280:5280"   # HTTP admin interface
+    volumes:
+      - ./ejabberd.yml:/home/ejabberd/conf/ejabberd.yml:ro
+    environment:
+      - EJABBERD_DOMAIN=example.com
+    healthcheck:
+      test: ["CMD", "ejabberdctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Conduit itself is not containerized for development — run it on the host
+# against this ejabberd:  go run ./cmd/conduit -config config/config.dev.yaml
+# (A Dockerfile is provided for building a production image; see README.)
