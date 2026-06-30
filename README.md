@@ -6,8 +6,37 @@ Built with Go 1.24, [mellium.im/xmpp](https://mellium.im/xmpp), and a vanilla-JS
 
 ---
 
+## Quickstart (dev)
+
+You need **Go 1.24+** and **Docker**. From the repo root:
+
+```bash
+# 1. Start ejabberd (XMPP server) in Docker
+docker compose up -d ejabberd
+
+# 2. Create two test accounts (one-time, after ejabberd is healthy)
+docker exec -it webchat-ejabberd-1 ejabberdctl register alice example.com password123
+docker exec -it webchat-ejabberd-1 ejabberdctl register bob   example.com password456
+
+# 3. Run Conduit in dev mode
+go run ./cmd/conduit -config config/config.dev.yaml
+```
+
+Then open two browser tabs and chat between them:
+
+- http://localhost:8080?user=alice
+- http://localhost:8080?user=bob
+
+That's it — no build step for the frontend (it's embedded). Edit Go or
+`internal/frontend/web/*` files, stop the process, and re-run step 3 to pick up
+changes. More detail in [Development](#development); architecture and internals
+in [DEVELOPERS.md](DEVELOPERS.md).
+
+---
+
 ## Table of Contents
 
+- [Quickstart (dev)](#quickstart-dev)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Message Flow](#message-flow)
