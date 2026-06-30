@@ -18,6 +18,7 @@ const (
 	EventConnected                         // session fully negotiated
 	EventDisconnected                      // session lost
 	EventSubscribeRequest                  // someone wants to subscribe to our presence
+	EventMessageError                      // an outgoing message bounced (delivery failed)
 )
 
 // RosterItem is a single entry in the XMPP roster.

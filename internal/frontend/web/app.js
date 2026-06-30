@@ -176,6 +176,7 @@ function onMessage(ev) {
     case 'room_list':         handleRoomList(msg);           break;
     case 'history_batch':     handleHistory(msg);            break;
     case 'subscribe_request': handleSubscribeRequest(msg);   break;
+    case 'message_error':     handleMessageError(msg);       break;
     case 'error':             showToast(msg.error || 'Server error', true); break;
   }
 }
@@ -408,8 +409,34 @@ function handleOccupants(msg) {
   }
 }
 
+function pushSystemLine(key, text, warn = false) {
+  // Collapse consecutive identical system lines (e.g. servers that send a
+  // bounce twice, or repeated join/leave churn).
+  const arr = state.messages[key];
+  if (arr && arr.length) {
+    const last = arr[arr.length - 1];
+    if (last.system && last.body === text) return;
+  }
+  pushMessage(key, { system: true, warn, body: text, ts: new Date().toISOString() });
+}
+
 function pushSystemMessage(room, text) {
-  pushMessage(convKey('room', room), { system: true, body: text, ts: new Date().toISOString() });
+  pushSystemLine(convKey('room', room), text);
+}
+
+// handleMessageError surfaces a bounced (undeliverable) message as a warning
+// line in the affected conversation, with a toast fallback if it isn't open.
+function handleMessageError(msg) {
+  let key, label;
+  if (msg.room) { key = convKey('room', msg.room); label = '#' + localPart(msg.room); }
+  else if (msg.to) { key = convKey('dm', msg.to); label = msg.to; }
+  else return;
+
+  const reason = msg.body || 'message could not be delivered';
+  pushSystemLine(key, `⚠ Couldn't deliver to ${label}: ${reason}`, true);
+
+  const active = state.activeConv && convKey(state.activeConv.type, state.activeConv.jid) === key;
+  if (!active) showToast(`Undelivered (${label}): ${reason}`, true);
 }
 
 function handleHistory(msg) {
@@ -558,7 +585,7 @@ function renderMessages() {
 function appendMessageToDOM(m, lastFrom) {
   if (m.system) {
     const el = document.createElement('div');
-    el.className = 'msg-system';
+    el.className = 'msg-system' + (m.warn ? ' msg-system-warn' : '');
     el.textContent = m.body;
     messagesEl.appendChild(el);
     return;

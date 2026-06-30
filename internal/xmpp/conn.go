@@ -108,6 +108,7 @@ func (c *conn) connect(ctx context.Context) (*mx.Session, *mux.ServeMux, error) 
 		mxhistory.Handle(c.histHandler),
 		mux.MessageFunc(stanza.ChatMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleChatMsg)),
 		mux.MessageFunc(stanza.GroupChatMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleGroupChatMsg)),
+		mux.MessageFunc(stanza.ErrorMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleErrorMsg)),
 		mux.PresenceFunc(stanza.AvailablePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handlePresence)),
 		mux.PresenceFunc(stanza.UnavailablePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handleUnavailablePresence)),
 		mux.PresenceFunc(stanza.SubscribePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handleSubscribePresence)),
@@ -243,6 +244,27 @@ func (c *conn) handleGroupChatMsg(msg stanza.Message, t xmlstream.TokenReadEncod
 	return nil
 }
 
+// handleErrorMsg handles a bounced message (<message type="error">). The error
+// comes "from" the JID we tried to reach (a contact for a DM, or the room for a
+// MUC message). We surface a human-readable reason to the browser so the sender
+// learns their message was not delivered.
+func (c *conn) handleErrorMsg(msg stanza.Message, t xmlstream.TokenReadEncoder) error {
+	from := msg.From.String()
+	reason := readErrorReason(t)
+
+	bare := bareJIDStr(from)
+	c.roomsMu.RLock()
+	_, isRoom := c.joinedRooms[bare]
+	c.roomsMu.RUnlock()
+
+	evt := Event{Type: EventMessageError, From: bare, Body: reason, Time: time.Now()}
+	if isRoom {
+		evt.Room = bare
+	}
+	c.events <- evt
+	return nil
+}
+
 func (c *conn) dispatchHistoryMessage(msg stanza.Message, t xmlstream.TokenReadEncoder) error {
 	body, ts := readMessageChildren(t)
 	if body == "" {
@@ -342,6 +364,73 @@ func readMessageChildren(t xmlstream.TokenReadEncoder) (body string, ts time.Tim
 			}
 		}
 	}
+}
+
+// readErrorReason extracts a human-readable reason from a bounced message's
+// <error> child: the optional <text>, or failing that the defined-condition
+// element name (e.g. "remote-server-not-found" → "remote server not found").
+func readErrorReason(t xmlstream.TokenReadEncoder) string {
+	const fallback = "message could not be delivered"
+	d := xml.NewTokenDecoder(t)
+	// Discard the stanza start element replayed by mellium.
+	if _, err := d.Token(); err != nil {
+		return fallback
+	}
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			return fallback
+		}
+		switch v := tok.(type) {
+		case xml.EndElement:
+			return fallback
+		case xml.StartElement:
+			if v.Name.Local == "error" {
+				return readErrorElement(d, fallback)
+			}
+			d.Skip() //nolint:errcheck
+		}
+	}
+}
+
+func readErrorElement(d *xml.Decoder, fallback string) string {
+	var condition, text string
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			break
+		}
+		switch v := tok.(type) {
+		case xml.EndElement:
+			if v.Name.Local == "error" {
+				return formatErrorReason(condition, text, fallback)
+			}
+		case xml.StartElement:
+			if v.Name.Local == "text" {
+				d.DecodeElement(&text, &v) //nolint:errcheck
+			} else {
+				if condition == "" {
+					condition = v.Name.Local
+				}
+				d.Skip() //nolint:errcheck
+			}
+		}
+	}
+	return formatErrorReason(condition, text, fallback)
+}
+
+func formatErrorReason(condition, text, fallback string) string {
+	// Prefer the standardized defined-condition (e.g. "remote-server-not-found"
+	// → "remote server not found"): it is concise and consistent. Some servers
+	// add a verbose/technical <text> (e.g. raw DNS errors) that reads worse, so
+	// only fall back to it when no condition is present.
+	if condition != "" {
+		return strings.ReplaceAll(condition, "-", " ")
+	}
+	if s := strings.TrimSpace(text); s != "" {
+		return s
+	}
+	return fallback
 }
 
 const mucUserNS = "http://jabber.org/protocol/muc#user"

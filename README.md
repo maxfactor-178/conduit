@@ -463,6 +463,7 @@ All WebSocket messages are JSON. The browser sends **inbound** messages; the ser
 | `room_message` | `room`, `from`, `nick`, `body`, `timestamp` | MUC message |
 | `room_occupants` | `room`, `from`, `show`, `payload: Occupant[]` | Occupant join/leave |
 | `history_batch` | `payload: OutboundMessage[]` | MAM history page |
-| `room_list` | `payload: RoomInfo[]` | MUC room discovery results |
+| `room_list` | `payload: RoomInfo[]`, `hosts` | MUC room discovery results + the conference hosts queried |
 | `subscribe_request` | `from` | Someone requests to add you as a contact |
+| `message_error` | `to` or `room`, `body` | An outgoing message bounced; `body` is the reason |
 | `error` | `error` | Server-side error description |

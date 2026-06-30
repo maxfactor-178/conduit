@@ -20,6 +20,7 @@ const (
 	TypeSubscribeRequest    = "subscribe_request"
 	TypeDiscoverRooms       = "discover_rooms"
 	TypeRoomList            = "room_list"
+	TypeMessageError        = "message_error"
 )
 
 // InboundMessage is a message received from the browser over WebSocket.

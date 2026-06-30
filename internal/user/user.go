@@ -224,6 +224,14 @@ func eventToOutbound(evt xmpp.Event) *protocol.OutboundMessage {
 		return &protocol.OutboundMessage{Type: protocol.TypeConnected}
 	case xmpp.EventSubscribeRequest:
 		return &protocol.OutboundMessage{Type: protocol.TypeSubscribeRequest, From: evt.From}
+	case xmpp.EventMessageError:
+		// evt.Room is set for a MUC bounce; otherwise evt.From is the contact JID.
+		return &protocol.OutboundMessage{
+			Type: protocol.TypeMessageError,
+			To:   evt.From,
+			Room: evt.Room,
+			Body: sanitize.Text(evt.Body),
+		}
 	case xmpp.EventChat:
 		return &protocol.OutboundMessage{
 			Type:      protocol.TypeChat,

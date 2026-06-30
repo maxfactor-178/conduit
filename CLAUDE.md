@@ -70,7 +70,7 @@ go run ./cmd/conduit -config config/config.dev.yaml
 
 Inbound (browser → server): `chat`, `room_message`, `join_room`, `leave_room`, `presence`, `add_contact`, `remove_contact`, `accept_subscription`, `decline_subscription`, `history`, `discover_rooms`
 
-Outbound (server → browser): `connected`, `roster`, `roster_update`, `presence`, `chat`, `room_message`, `room_occupants`, `history_batch`, `room_list`, `subscribe_request`, `error`
+Outbound (server → browser): `connected`, `roster`, `roster_update`, `presence`, `chat`, `room_message`, `room_occupants`, `history_batch`, `room_list`, `subscribe_request`, `message_error`, `error`
 
 Full field details in [README.md — Protocol Reference](README.md#protocol-reference).
 
@@ -98,6 +98,7 @@ Full field details in [README.md — Protocol Reference](README.md#protocol-refe
 - MUC rooms: join/leave, message send/receive, occupant list panel, room discovery modal (groups results by server; users can browse/join rooms on other federated servers by adding a conference host)
 - Roster: add/remove contacts, subscription request flow (accept/decline modal)
 - Presence indicators (online/away/dnd/offline dots)
+- Delivery-failure feedback: bounced messages (`<message type=error>`) surface as a warning line in the affected DM/room, with a toast fallback
 - Multi-session: multiple tabs and multiple HTTP users mapped to the same JID all stay in sync
 - Discord-style UI: message grouping by sender, compact rows, sender separator lines, unread badges
 - Unread indicators: per-conversation badges **and** a `(N)` prefix on the browser-tab title (`updateTitle` in `app.js`)

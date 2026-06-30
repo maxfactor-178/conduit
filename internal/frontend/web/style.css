@@ -320,6 +320,12 @@ html, body, #app {
   margin: 2px 0;
 }
 
+/* Warning system notices (e.g. undeliverable message) */
+.msg-system-warn {
+  color: #f04747;
+  font-weight: 600;
+}
+
 /* Compact rows: always show the time to the left of the avatar */
 .compact-time {
   position: absolute;
