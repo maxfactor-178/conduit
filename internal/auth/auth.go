@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"conduit/internal/audit"
 )
 
 type contextKey string
@@ -21,7 +23,12 @@ type Mapper struct {
 	devUsername string
 	devPassword string
 	header      string
+	audit       *audit.Logger
 }
+
+// SetAudit attaches an audit logger so rejected requests are recorded. Safe to
+// pass nil (auditing disabled).
+func (m *Mapper) SetAudit(a *audit.Logger) { m.audit = a }
 
 // NewMapper loads JID and credential mappings from disk.
 func NewMapper(header, jidFile, credFile string, devEnabled bool, devUser, devPass string) (*Mapper, error) {
@@ -97,6 +104,7 @@ func (m *Mapper) Middleware(domain string, next http.Handler) http.Handler {
 			username = m.devUsername
 		}
 		if username == "" {
+			m.audit.AuthRejected(audit.ClientIP(r), "missing or empty username header")
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}

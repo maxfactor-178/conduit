@@ -42,6 +42,7 @@ go run ./cmd/conduit -config config/config.dev.yaml
 | `cmd/conduit` | Entry point, wires everything |
 | `config` | YAML config + defaults |
 | `internal/auth` | Username → JID mapping, HTTP middleware |
+| `internal/audit` | Structured audit log of auth/session events |
 | `internal/httpserver` | HTTP server, /healthz, /readyz, graceful shutdown |
 | `internal/websocket` | WebSocket upgrade, read/write pumps |
 | `internal/bridge` | JSON protocol ↔ XMPP operations (per session) |

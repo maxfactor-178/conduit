@@ -216,15 +216,45 @@ history:
   max_limit: 200
 
 log:
-  level: "info"     # debug | info | warn | error
-  format: "text"    # text | json
+  level: "info"      # debug | info | warn | error
+  format: "text"     # text | json | syslog (RFC 3164 lines, facility local0)
+  file: ""           # app log path; empty = stdout
+  audit_file: ""     # auth audit log path; empty = audit records go to the app log
 ```
+
+### Logging & audit
+
+- **`file`** sets where the application log goes. Empty means stdout (handy under
+  systemd/journald, which captures stdout automatically).
+- **`audit_file`** enables a dedicated audit log of authentication events:
+  `session_open`, `session_close`, and `auth_rejected`, each with the JID (where
+  known), client IP (honouring `X-Forwarded-For` behind the proxy), and session
+  ID. If left empty, these records are written into the app log instead.
+- **`format: syslog`** emits classic BSD syslog lines
+  (`<PRI>timestamp host conduit[pid]: msg key=value …`) that standard collectors
+  parse out of the box. `json` is best for structured ingestion; `text` is the
+  human-friendly default.
+- **Rotation** is left to the OS. Conduit opens log files append-only and never
+  rotates them itself — point `logrotate` at them using `copytruncate` (a sample
+  config ships as [`conduit.logrotate`](conduit.logrotate)).
 
 ---
 
 ## Authentication
 
 Conduit does **not** handle login itself. It expects a trusted reverse proxy (nginx, Caddy, Authentik, etc.) to authenticate users and set a header.
+
+> ⚠️ **Security-critical: the username header is fully trusted.** Conduit treats
+> whoever the `X-Remote-User` header names as authenticated — there is no further
+> verification. This means:
+>
+> - **Never expose Conduit's port directly.** Bind it to localhost (or an internal
+>   network) and only reach it through the authenticating proxy.
+> - **The proxy must overwrite the header on every request**, not just add it. If a
+>   client can send their own `X-Remote-User`, they can impersonate any user.
+>   In nginx, always set it explicitly (`proxy_set_header X-Remote-User $remote_user;`)
+>   so any client-supplied value is replaced.
+> - Keep `allowed_origins` set to your real hostname(s) in production, not `["*"]`.
 
 ### Header-based auth (production)
 

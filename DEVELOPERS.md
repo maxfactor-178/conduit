@@ -146,6 +146,7 @@ docker exec -it webchat-ejabberd-1 ejabberdctl get_loglevel
 cmd/conduit/          Entry point — wires all components, reads config, handles OS signals
 config/                YAML config types + defaults
 internal/
+  audit/               Structured audit log of auth/session events (login/logout/rejected)
   auth/                Maps HTTP usernames to XMPP JIDs; HTTP auth middleware
   bridge/              Translates browser JSON messages ↔ XMPP operations (one per session)
   frontend/            Embeds static files from web/ into the binary

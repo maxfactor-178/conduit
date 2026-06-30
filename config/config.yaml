@@ -34,5 +34,8 @@ history:
   max_limit: 200
 
 log:
-  level: "info"
-  format: "text"
+  level: "info"            # debug | info | warn | error
+  format: "text"           # text | json | syslog (RFC 3164 lines, facility local0)
+  file: "/var/log/conduit/conduit.log"     # app log; empty = stdout
+  audit_file: "/var/log/conduit/audit.log" # auth events (login/logout/rejected);
+                                            # empty = written into the app log

@@ -56,8 +56,10 @@ type HistoryConfig struct {
 }
 
 type LogConfig struct {
-	Level  string `yaml:"level"`  // "debug" | "info" | "warn" | "error"
-	Format string `yaml:"format"` // "text" | "json"
+	Level     string `yaml:"level"`      // "debug" | "info" | "warn" | "error"
+	Format    string `yaml:"format"`     // "text" | "json" | "syslog"
+	File      string `yaml:"file"`       // app log destination; empty = stdout
+	AuditFile string `yaml:"audit_file"` // audit log destination; empty = same as app log
 }
 
 // Load reads and parses the YAML config file at path.

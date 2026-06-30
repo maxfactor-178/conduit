@@ -8,6 +8,7 @@ import (
 
 	gorillaws "github.com/gorilla/websocket"
 
+	"conduit/internal/audit"
 	"conduit/internal/auth"
 	"conduit/internal/bridge"
 	"conduit/internal/history"
@@ -30,6 +31,7 @@ type Handler struct {
 	sessions *session.Manager
 	history  *history.Service
 	brand    string
+	audit    *audit.Logger
 	log      *slog.Logger
 }
 
@@ -40,6 +42,7 @@ func NewHandler(
 	hist *history.Service,
 	allowedOrigins []string,
 	brand string,
+	auditLog *audit.Logger,
 	log *slog.Logger,
 ) *Handler {
 	originCheck := func(r *http.Request) bool {
@@ -65,6 +68,7 @@ func NewHandler(
 		sessions: sessions,
 		history:  hist,
 		brand:    brand,
+		audit:    auditLog,
 		log:      log,
 	}
 }
@@ -92,10 +96,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	sess := h.sessions.Create(jid)
 	u.AddSession(sess)
+	remote := audit.ClientIP(r)
+	h.audit.SessionOpen(jid, remote, sess.ID)
 	defer func() {
 		u.RemoveSession(sess.ID)
 		h.sessions.Remove(sess.ID)
 		wsConn.Close()
+		h.audit.SessionClose(jid, remote, sess.ID)
 	}()
 
 	ctx, cancel := context.WithCancel(r.Context())

@@ -1,0 +1,18 @@
+# Sample logrotate config for Conduit.
+# Install to /etc/logrotate.d/conduit (adjust paths to match your config.yaml
+# log.file / log.audit_file settings).
+#
+# Conduit holds its log files open append-only and does not reopen them, so we
+# use `copytruncate`: logrotate copies the file and truncates the original in
+# place, which Conduit keeps writing to. (There is a tiny window where lines can
+# be lost during the copy; acceptable for ops logs.)
+
+/var/log/conduit/conduit.log /var/log/conduit/audit.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}

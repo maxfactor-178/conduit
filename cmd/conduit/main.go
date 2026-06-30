@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,8 +14,8 @@ import (
 	"conduit/internal/httpserver"
 	"conduit/internal/session"
 	"conduit/internal/user"
-	internalxmpp "conduit/internal/xmpp"
 	wshandler "conduit/internal/websocket"
+	internalxmpp "conduit/internal/xmpp"
 )
 
 const version = "0.1.0"
@@ -38,7 +37,16 @@ func main() {
 		cfg.Dev.Username = v
 	}
 
-	log := buildLogger(cfg.Log)
+	log, auditLog, closers, err := buildLogging(cfg.Log)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "init logging: %v\n", err)
+		os.Exit(1)
+	}
+	defer func() {
+		for _, c := range closers {
+			c.Close()
+		}
+	}()
 
 	if cfg.Dev.Enabled {
 		log.Warn("DEV MODE ENABLED — do not use in production")
@@ -56,6 +64,7 @@ func main() {
 		log.Error("auth mapper init failed", "err", err)
 		os.Exit(1)
 	}
+	authMapper.SetAudit(auditLog)
 
 	xmppFactory := func(ctx context.Context, jid string) (internalxmpp.XMPPConn, error) {
 		password, ok := authMapper.PasswordFor(jid)
@@ -72,7 +81,7 @@ func main() {
 	userMgr := user.NewManager(xmppFactory, cfg.XMPP.IdleShutdown, log)
 	histSvc := history.New(cfg.History.DefaultLimit, cfg.History.MaxLimit, log)
 
-	wsHandler := wshandler.NewHandler(userMgr, sessionMgr, histSvc, cfg.HTTP.AllowedOrigins, cfg.Brand, log)
+	wsHandler := wshandler.NewHandler(userMgr, sessionMgr, histSvc, cfg.HTTP.AllowedOrigins, cfg.Brand, auditLog, log)
 	httpSrv := httpserver.New(cfg.HTTP, cfg.XMPP, authMapper, wsHandler, log)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -84,24 +93,4 @@ func main() {
 		os.Exit(1)
 	}
 	log.Info("shutdown complete")
-}
-
-func buildLogger(cfg config.LogConfig) *slog.Logger {
-	level := slog.LevelInfo
-	switch cfg.Level {
-	case "debug":
-		level = slog.LevelDebug
-	case "warn":
-		level = slog.LevelWarn
-	case "error":
-		level = slog.LevelError
-	}
-	opts := &slog.HandlerOptions{Level: level}
-	var handler slog.Handler
-	if cfg.Format == "json" {
-		handler = slog.NewJSONHandler(os.Stdout, opts)
-	} else {
-		handler = slog.NewTextHandler(os.Stdout, opts)
-	}
-	return slog.New(handler)
 }
