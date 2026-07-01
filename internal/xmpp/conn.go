@@ -106,9 +106,14 @@ func (c *conn) connect(ctx context.Context) (*mx.Session, *mux.ServeMux, error) 
 	m := mux.New(stanza.NSClient,
 		roster.Handle(c.newRosterHandler()),
 		mxhistory.Handle(c.histHandler),
-		mux.MessageFunc(stanza.ChatMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleChatMsg)),
-		mux.MessageFunc(stanza.GroupChatMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleGroupChatMsg)),
-		mux.MessageFunc(stanza.ErrorMessage, xml.Name{}, mux.MessageHandlerFunc(c.handleErrorMsg)),
+		// Key each handler to its distinguishing child element. Mellium's mux
+		// invokes a message handler once per matching child, so a wildcard
+		// (xml.Name{}) fires once for EVERY child — and ejabberd adds extra
+		// children (MAM <stanza-id>, origin-id, …) beyond <body>, which caused
+		// each message to be processed multiple times.
+		mux.MessageFunc(stanza.ChatMessage, xml.Name{Local: "body"}, mux.MessageHandlerFunc(c.handleChatMsg)),
+		mux.MessageFunc(stanza.GroupChatMessage, xml.Name{Local: "body"}, mux.MessageHandlerFunc(c.handleGroupChatMsg)),
+		mux.MessageFunc(stanza.ErrorMessage, xml.Name{Local: "error"}, mux.MessageHandlerFunc(c.handleErrorMsg)),
 		mux.PresenceFunc(stanza.AvailablePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handlePresence)),
 		mux.PresenceFunc(stanza.UnavailablePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handleUnavailablePresence)),
 		mux.PresenceFunc(stanza.SubscribePresence, xml.Name{}, mux.PresenceHandlerFunc(c.handleSubscribePresence)),

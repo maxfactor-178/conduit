@@ -91,6 +91,7 @@ Full field details in [README.md — Protocol Reference](README.md#protocol-refe
 - **Messages seen 3×**: auto-history on DM open raced with live messages + `renderMessages()` re-rendering state that had duplicates. Fixed: removed auto-history; added `isDuplicate()` check.
 - **MAM `before-id` error**: ejabberd doesn't support MAM:2#extended data form fields. Fixed: use RSM `Last:true` + `PageID` instead of `BeforeID`/`AfterID`.
 - **join_room never sent**: `btn-do-join-room` pre-set `state.rooms[jid]` before calling `openRoom`, so `openRoom`'s guard was always false. Fixed: let `openRoom` handle initialization.
+- **Messages processed 3× (unread badge = 3 per message)**: mellium's mux (`forChildren`) invokes a message handler **once per child element**. Handlers were registered with `xml.Name{}` (wildcard), so every child (`<body>` + MAM `<stanza-id>` + origin-id) fired the handler again. Display was deduped by `isDuplicate`, but `bumpUnread` ran per delivery. Fixed: register each handler keyed to its distinguishing child (`body` for chat/groupchat, `error` for error messages) so it fires once; also `pushMessage` now returns whether it added, and unread/notifications are gated on that.
 
 ## Current state / what's working
 

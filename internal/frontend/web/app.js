@@ -227,7 +227,8 @@ function handleChat(msg) {
     state.roster[peer] = { jid: peer, name: localPart(peer), show: 'available', status: '' };
   }
   const key = convKey('dm', peer);
-  pushMessage(key, { from, body: msg.body, ts: msg.timestamp });
+  const isNew = pushMessage(key, { from, body: msg.body, ts: msg.timestamp });
+  if (!isNew) return;
   if (!state.activeConv || state.activeConv.jid !== peer) {
     bumpUnread(key);
     renderDMList();
@@ -238,7 +239,8 @@ function handleChat(msg) {
 function handleRoomMsg(msg) {
   const key       = convKey('room', msg.room);
   const mentioned = isMentioned(msg.body);
-  pushMessage(key, { from: msg.from, nick: msg.nick || nickOf(msg.from), body: msg.body, ts: msg.timestamp, mentioned });
+  const isNew = pushMessage(key, { from: msg.from, nick: msg.nick || nickOf(msg.from), body: msg.body, ts: msg.timestamp, mentioned });
+  if (!isNew) return;
   if (!state.activeConv || state.activeConv.jid !== msg.room) {
     bumpUnread(key);
     renderRoomList();
@@ -464,14 +466,18 @@ function isDuplicate(key, m) {
   );
 }
 
+// pushMessage stores a message and returns true if it was newly added (false if
+// it was a duplicate). Callers gate unread counts / notifications on the return
+// value so a message delivered more than once is only counted once.
 function pushMessage(key, m) {
   if (!state.messages[key]) state.messages[key] = [];
-  if (isDuplicate(key, m)) return;
+  if (isDuplicate(key, m)) return false;
   state.messages[key].push(m);
   if (state.activeConv && convKey(state.activeConv.type, state.activeConv.jid) === key) {
     appendMessageToDOM(m);
     scrollToBottom();
   }
+  return true;
 }
 
 function prependMessage(key, m) {
